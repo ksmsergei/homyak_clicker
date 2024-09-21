@@ -23,7 +23,8 @@
 /* USER CODE BEGIN Includes */
 
 #include "ST7920_lib.h"
-#include "images.h"
+#include "hamster.h"
+#include "logo.h"
 
 extern char tx_buffer[128];
 extern uint8_t Frame_buffer[1024];
@@ -120,14 +121,7 @@ int main(void)
   ST7920_Init();
   ST7920_Graphic_mode(1);
 
-  //Draw logo
-  for (int i = 0; i < 1024; i++) {
-	Frame_buffer[i] = logo[i];
-  }
-
-  ST7920_Update();
-
-  HAL_Delay(1500);
+  draw_logo();
 
   finished_logo = true;
 
@@ -373,8 +367,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN0_Pin BTN1_Pin */
-  GPIO_InitStruct.Pin = BTN0_Pin|BTN1_Pin;
+  /*Configure GPIO pins : BTN_CLICK_Pin BTN_INVERSE_Pin */
+  GPIO_InitStruct.Pin = BTN_CLICK_Pin|BTN_INVERSE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -398,11 +392,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		return;
 	}
 
-	if (GPIO_Pin == BTN0_Pin && btn0_state) {
+	if (GPIO_Pin == BTN_CLICK_Pin && btn0_state) {
 		btn0_state = false;
 
 		HAL_TIM_Base_Start_IT(&htim1);
-	} else if (GPIO_Pin == BTN1_Pin && btn1_state) {
+	} else if (GPIO_Pin == BTN_INVERSE_Pin && btn1_state) {
 		btn1_state = false;
 
 		HAL_TIM_Base_Start_IT(&htim2);
@@ -414,14 +408,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim1) {
-		if (HAL_GPIO_ReadPin(BTN0_GPIO_Port, BTN0_Pin) == GPIO_PIN_SET) {
+		if (HAL_GPIO_ReadPin(BTN_CLICK_GPIO_Port, BTN_CLICK_Pin) == GPIO_PIN_SET) {
 			coins++;
 		}
 
 		btn0_state = true;
 		HAL_TIM_Base_Stop_IT(&htim1);
 	} else if (htim == &htim2) {
-		if (HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin) == GPIO_PIN_SET) {
+		if (HAL_GPIO_ReadPin(BTN_INVERSE_GPIO_Port, BTN_INVERSE_Pin) == GPIO_PIN_SET) {
 			dark_theme = !dark_theme;
 		}
 
